@@ -1,0 +1,4 @@
+config:
+  port: 端口号
+  qq_id: 你的QQ号
+  verifyKey: 你之前填的 verifyKey

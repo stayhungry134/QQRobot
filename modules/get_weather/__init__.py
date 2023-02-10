@@ -8,16 +8,11 @@ Description:
 import requests
 import datetime
 from graia.ariadne.app import Ariadne
-from graia.ariadne.event.message import FriendMessage, GroupMessage
+from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.event.mirai import NudgeEvent
-from graia.ariadne.message.element import Image, Voice
-from graia.ariadne.message.parser.base import ContainKeyword
+from graia.ariadne.message.parser.base import MatchRegex, DetectPrefix
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
-from graia.ariadne.model import Group, Friend
-from graiax import silkcoder  # 这里可能需要安装 ffmpeg
-
 
 header = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
@@ -65,14 +60,14 @@ def get_weather(city='530114', index=0):
 
 def get_city(address):
     """用于请求城市编码"""
-    #https://restapi.amap.com/v3/geocode/geo?address = 北京市朝阳区阜通东大街6号 & output = XML & key = < 用户的key >
+    # https://restapi.amap.com/v3/geocode/geo?address = 北京市朝阳区阜通东大街6号 & output = XML & key = < 用户的key >
     url = 'https://restapi.amap.com/v3/geocode/geo'
     data = {
         'address': address,
         'key': '4237e1743fe07beffd1fef65ddf52767',
     }
     response = requests.get(url, params=data).json()
-    if response.get('status') == 0:
+    if response.get('status') == '0':
         return "请求失败了！"
     city = response.get('geocodes')[0]
     adcode = city.get('adcode')
@@ -82,18 +77,18 @@ def get_city(address):
 channel = Channel.current()
 
 
-@channel.use(ListenerSchema(listening_events=[GroupMessage]))
-async def setu(app: Ariadne, group: Group, message: MessageChain):
-    if message.display == "#今日天气":
-        weather = get_weather()
-        await app.send_message(
-            group,
-            MessageChain(weather),
-        )
+@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#今日天气')]))
+async def send_weather(app: Ariadne, target: MessageEvent):
+    weather = get_weather()
+    print(weather)
+    await app.send_message(
+        target,
+        MessageChain(weather),
+    )
 
 
-@channel.use(ListenerSchema(listening_events=[GroupMessage], decorators=[ContainKeyword("天气")]))
-async def setu(app: Ariadne, group: Group, message: MessageChain):
+@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[MatchRegex("^(?!#).+天气.*")]))
+async def send_weather_expand(app: Ariadne, target: MessageEvent, message: MessageChain):
     weather_message = message.display
     address = weather_message.split('天气')[0]
     date_index = 0
@@ -109,6 +104,6 @@ async def setu(app: Ariadne, group: Group, message: MessageChain):
     city = get_city(address)
     weather = get_weather(city, index=date_index)
     await app.send_message(
-        group,
+        target,
         MessageChain(weather),
     )
