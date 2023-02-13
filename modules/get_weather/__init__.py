@@ -5,28 +5,36 @@ author: Ethan
 
 Description:
 """
+import os
+from typing import Union
+import yaml
 import requests
 import datetime
+import yaml
+from creart import create
 from graia.ariadne.app import Ariadne
 from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import MatchRegex, DetectPrefix
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
+from graia.scheduler import GraiaScheduler, timers
+from graia.scheduler.saya import SchedulerSchema
 
-header = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-}
+from modules import BASE_DIR
+
+f = open(os.path.join(BASE_DIR, 'config.yaml'), 'r', encoding='utf-8').read()
+weather = yaml.load(f, Loader=yaml.FullLoader).get('weather')
 
 
-def get_weather(city='530114', index=0):
+def get_weather(city=weather.get('city'), index=0):
     """用于请求天气"""
     url = 'https://restapi.amap.com/v3/weather/weatherInfo'
     today = datetime.date.today()
     data = {
         'extensions': 'all',
         'city': city,  # 呈贡区
-        'key': '4237e1743fe07beffd1fef65ddf52767',
+        'key': weather.get('key'),
     }
     if city == "请求失败了！":
         return city
@@ -51,7 +59,8 @@ def get_weather(city='530114', index=0):
     elif int(weather_data.get('daytemp')) > 30:
         temp_remark = '，热死爹了，记得吃大西瓜'
     week_day = ['一', '二', '三', '四', '五', '六', '天']
-    result = f"今天是{today.strftime('%Y年%m月%d日')}，星期{week_day[today.weekday()]}。\n{forecasts.get('city')}{date_remake}{weather_data.get('dayweather')}，" \
+    result = f"今天是{today.strftime('%Y年%m月%d日')}，星期{week_day[today.weekday()]}。\n" \
+             f"{forecasts.get('city')}{date_remake}{weather_data.get('dayweather')}，" \
              f"{weather_data.get('nighttemp')}度到{weather_data.get('daytemp')}度{temp_remark}{weather_remark}。" \
              f"{weather_data.get('daywind')}风{weather_data.get('daypower')}级{wind_remark}。"
 
@@ -64,7 +73,7 @@ def get_city(address):
     url = 'https://restapi.amap.com/v3/geocode/geo'
     data = {
         'address': address,
-        'key': '4237e1743fe07beffd1fef65ddf52767',
+        'key': weather.get('key'),
     }
     response = requests.get(url, params=data).json()
     if response.get('status') == '0':
@@ -75,15 +84,15 @@ def get_city(address):
 
 
 channel = Channel.current()
+sche = create(GraiaScheduler)
 
 
 @channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#今日天气')]))
 async def send_weather(app: Ariadne, target: MessageEvent):
-    weather = get_weather()
-    print(weather)
+    today_weather = get_weather()
     await app.send_message(
         target,
-        MessageChain(weather),
+        MessageChain(today_weather),
     )
 
 
@@ -102,8 +111,25 @@ async def send_weather_expand(app: Ariadne, target: MessageEvent, message: Messa
             if address[-1] == '大':
                 date_index = 3
     city = get_city(address)
-    weather = get_weather(city, index=date_index)
+    city_weather = get_weather(city, index=date_index)
     await app.send_message(
         target,
-        MessageChain(weather),
+        MessageChain(city_weather),
     )
+
+
+@channel.use(SchedulerSchema(timers.crontabify("50 7 * * * 00")))
+async def send_morning_weather(app: Ariadne):
+    morning_weather = get_weather()
+    morning_friend = weather.get('morning_friend')
+    morning_group = weather.get('morning_group')
+    for friend in morning_friend:
+        await app.send_friend_message(
+            friend,
+            MessageChain(morning_weather)
+        )
+    for group in morning_group:
+        await app.send_group_message(
+            group,
+            MessageChain(morning_weather)
+        )
