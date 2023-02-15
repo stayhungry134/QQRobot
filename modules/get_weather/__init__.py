@@ -6,8 +6,6 @@ author: Ethan
 Description:
 """
 import os
-from typing import Union
-import yaml
 import requests
 import datetime
 import yaml
