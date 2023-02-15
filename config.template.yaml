@@ -1,4 +1,4 @@
 config:
-  port: 端口号
-  qq_id: 你的QQ号
-  verifyKey: 你之前填的 verifyKey
+  address: # 是你的 mirai-api-http 地址中的地址与端口  他们默认为 "http://localhost:8080"
+  qq_id:   # 你的机器人的 qq 号
+  verifyKey:  # 填入你的 mirai-api-http 配置中的 verifyKey

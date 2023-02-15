@@ -1,3 +1,5 @@
+master_id: 1414312486
+
 config:
   address: "http://localhost:8080"
   qq_id: 997813581
@@ -8,3 +10,11 @@ weather:
   city: '530114'
   morning_friend: [1414312486]
   morning_group: [331512758]
+
+iciba:
+  morning_friend: [1414312486]
+  morning_group: [331512758]
+
+github:
+  username: 'stayhungry134'
+  master: 1414312486
