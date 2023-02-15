@@ -5,8 +5,13 @@ author: Ethan
 
 Description: 
 """
+import os
+
 import requests
 import datetime
+
+import yaml
+from creart import create
 from graia.ariadne.app import Ariadne
 from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
 from graia.ariadne.message.chain import MessageChain
@@ -14,8 +19,13 @@ from graia.ariadne.message.element import Image, Voice
 from graia.ariadne.message.parser.base import MatchRegex, DetectPrefix
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
+from graia.scheduler import GraiaScheduler, timers
+from graia.scheduler.saya import SchedulerSchema
 from graiax import silkcoder
-from modules import headers
+from modules import headers, BASE_DIR
+
+f = open(os.path.join(BASE_DIR, 'config.yaml'), 'r', encoding='utf-8').read()
+iciba = yaml.load(f, Loader=yaml.FullLoader).get('iciba')
 
 
 def get_iciba():
@@ -42,6 +52,7 @@ def get_iciba():
 
 
 channel = Channel.current()
+sche = create(GraiaScheduler)
 
 
 @channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#每日一句')]))
@@ -55,3 +66,14 @@ async def handle_iciba(app: Ariadne, event: MessageEvent):
         event.sender,
         audio
     )
+
+
+@channel.use(SchedulerSchema(timers.crontabify("50 7 * * * 00")))
+async def send_morning_weather(app: Ariadne):
+    morning_group = iciba.get('morning_group')
+    content, note, picture, audio = get_iciba()
+    for group in morning_group:
+        await app.send_group_message(
+            group,
+            MessageChain([f"每日一句：", picture, f"\n{content}\n\n{note}"])
+        )
