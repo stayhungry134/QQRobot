@@ -13,7 +13,7 @@ import yaml
 
 from creart import create
 from graia.ariadne.app import Ariadne
-from graia.ariadne.event.message import FriendMessage
+from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.saya import Channel
@@ -41,7 +41,7 @@ channel = Channel.current()
 sche = create(GraiaScheduler)
 
 
-async def send_reminder(app, check=False):
+async def send_reminder(app, target=None, check=False):
     github_id = github_config.get('username')
     master = github_config.get('master')
     level_dic = get_github(github_id)
@@ -58,7 +58,7 @@ async def send_reminder(app, check=False):
             reminder_content = f"你今天还没有提交 github，上一次提交日期为 {last_push}\n\n" \
                                f"近一年中你有{contribution_counter}天提交了代码，总贡献数{sum_contribution}"
             await app.send_friend_message(
-                master,
+                target if target else master,
                 MessageChain(reminder_content)
             )
     else:
@@ -73,16 +73,16 @@ async def send_reminder(app, check=False):
         )
 
 
-@channel.use(ListenerSchema(listening_events=[FriendMessage], decorators=[DetectPrefix('#github')]))
-async def github_reminder(app: Ariadne):
+@channel.use(ListenerSchema(listening_events=[FriendMessage, GroupMessage], decorators=[DetectPrefix('#github')]))
+async def github_reminder(app: Ariadne, target: MessageEvent):
     """通过命令回复 github 提交情况"""
-    await send_reminder(app)
+    await send_reminder(app, target)
 
 
 @channel.use(SchedulerSchema(timers.crontabify("00 23 * * * 00")))
 async def send_github_reminder(app: Ariadne):
     """每天晚上检查是否提交了 github"""
     check = True
-    await send_reminder(app, check)
+    await send_reminder(app, check=True)
 
 

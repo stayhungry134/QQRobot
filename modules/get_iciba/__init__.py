@@ -56,14 +56,14 @@ sche = create(GraiaScheduler)
 
 
 @channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#每日一句')]))
-async def handle_iciba(app: Ariadne, event: MessageEvent):
+async def handle_iciba(app: Ariadne, target: MessageEvent):
     content, note, picture, audio = get_iciba()
     await app.send_message(
-        event.sender,
+        target,
         MessageChain([f"每日一句：", picture, f"\n{content}\n\n{note}"])
     )
     await app.send_message(
-        event.sender,
+        target,
         audio
     )
 
