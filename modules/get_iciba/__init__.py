@@ -69,11 +69,15 @@ async def handle_iciba(app: Ariadne, target: MessageEvent):
 
 
 @channel.use(SchedulerSchema(timers.crontabify("50 7 * * * 00")))
-async def send_morning_weather(app: Ariadne):
+async def send_morning_iciba(app: Ariadne):
     morning_group = iciba.get('morning_group')
     content, note, picture, audio = get_iciba()
     for group in morning_group:
         await app.send_group_message(
             group,
             MessageChain([f"每日一句：", picture, f"\n{content}\n\n{note}"])
+        )
+        await app.send_group_message(
+            group,
+            audio
         )
