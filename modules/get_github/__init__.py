@@ -57,7 +57,7 @@ async def send_reminder(app, target=None, check=False):
         if level_dic.get(today) == 0:
             reminder_content = f"你今天还没有提交 github，上一次提交日期为 {last_push}\n\n" \
                                f"近一年中你有{contribution_counter}天提交了代码，总贡献数{sum_contribution}"
-            await app.send_friend_message(
+            await app.send_message(
                 target if target else master,
                 MessageChain(reminder_content)
             )
@@ -67,22 +67,22 @@ async def send_reminder(app, target=None, check=False):
             push_remark = "你今天提交了 github"
         reminder_content = f"{push_remark}，上一次提交日期为 {last_push}\n\n" \
                            f"近一年中你有{contribution_counter}天提交了代码，总贡献数{sum_contribution}"
-        await app.send_friend_message(
-            master,
+        await app.send_message(
+            target if target else master,
             MessageChain(reminder_content)
         )
 
 
-@channel.use(ListenerSchema(listening_events=[FriendMessage, GroupMessage], decorators=[DetectPrefix('#github')]))
+@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#github')]))
 async def github_reminder(app: Ariadne, target: MessageEvent):
     """通过命令回复 github 提交情况"""
-    await send_reminder(app, target)
+    await send_reminder(app, target=target)
 
 
 @channel.use(SchedulerSchema(timers.crontabify("00 23 * * * 00")))
 async def send_github_reminder(app: Ariadne):
     """每天晚上检查是否提交了 github"""
     check = True
-    await send_reminder(app, check=True)
+    await send_reminder(app, check=check)
 
 
