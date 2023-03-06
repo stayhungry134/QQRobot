@@ -1,4 +1,20 @@
+  master_id: # 管理员的ID
+
 config:
   address: # 是你的 mirai-api-http 地址中的地址与端口  他们默认为 "http://localhost:8080"
   qq_id:   # 你的机器人的 qq 号
   verifyKey:  # 填入你的 mirai-api-http 配置中的 verifyKey
+
+weather:
+  key: # 高德天气pai接口的key
+  city: # 默认的城市编码
+  morning_friend: [ 每天发送天气的好友列表 ]
+  morning_group: [ 每天发送天气的群组列表 ]
+
+iciba:
+  morning_friend: [ 每天发送爱词霸每日一句的好友 ]
+  morning_group: [ 每天发送爱词霸每日一句的群组 ]
+
+github:
+  username: 'stayhungry134'  # 想要查看的github昵称
+  master: # 管理员QQ号，没有提交代码会通知管理员
