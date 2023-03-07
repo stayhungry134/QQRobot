@@ -28,7 +28,7 @@ def get_chat(msg):
         'msg': msg
     }
     response = requests.get(url=url, params=data).json()
-    return response.get('content')
+    return response.get('content').replace('{br}', '\n')
 
 
 @channel.use(ListenerSchema(listening_events=[GroupMessage], decorators=[MentionMe(), MatchRegex('^[^#]([^天气]*)$')]))
@@ -43,7 +43,7 @@ async def handle_grop_chat(app: Ariadne, group: Group, member: Member, message: 
 @channel.use(ListenerSchema(listening_events=[FriendMessage], decorators=[MatchRegex('^[^#]([^天气]*)$')]))
 async def handle_chat(app: Ariadne, message: MessageChain, friend_message: FriendMessage):
     """朋友发消息的时候聊天"""
-    content = get_chat(message.display).replace('{br}', '\n')
+    content = get_chat(message.display)
     await app.send_friend_message(
         friend_message.sender,
         MessageChain(content)
