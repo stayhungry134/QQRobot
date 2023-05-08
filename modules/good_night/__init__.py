@@ -7,8 +7,6 @@ Description:
 """
 
 import os
-import requests
-import datetime
 import yaml
 from creart import create
 from graia.ariadne.app import Ariadne
@@ -31,7 +29,7 @@ channel = Channel.current()
 sche = create(GraiaScheduler)
 
 
-@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#给香菜说晚安')]))
+@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#晚安')]))
 async def send_night(app: Ariadne, target: MessageEvent):
     file_path = os.path.join(BASE_DIR, '0_files', 'sister_good_night.mp3')
     audio = silkcoder.encode(file_path, ios_adaptive=True)
