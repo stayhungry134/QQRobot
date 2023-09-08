@@ -50,8 +50,8 @@ def get_weather(city=weather.get('city'), index=0):
         weather_remark = '，出门请记得带伞'
     elif '晴' in weather_data.get('dayweather'):
         weather_remark = '，请记得做好防晒'
-    if weather_data.get('daypower') != '≤3' and int(weather_data.get('daypower')) > 5:
-        wind_remark = '，要把你吹成傻X了，快点躲起来'
+    # if weather_data.get('daypower') != '≤3' and int(weather_data.get('daypower')) > 5:
+    #     wind_remark = '，要把你吹成傻X了，快点躲起来'
     if int(weather_data.get('daytemp')) < 20:
         temp_remark = '，有点凉，做好保暖'
     elif int(weather_data.get('daytemp')) > 30:
