@@ -3,7 +3,7 @@ name: __init__.py
 create_time: 2023-02-14
 author: Ethan White
 
-Description: 用于请求
+Description: 用于请求 github 的提交记录
 """
 import os
 import re
@@ -15,6 +15,7 @@ from creart import create
 from graia.ariadne.app import Ariadne
 from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
 from graia.ariadne.message.chain import MessageChain
+from graia.ariadne.message.element import Plain
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.saya import Channel
 from graia.saya.builtins.broadcast.schema import ListenerSchema
@@ -41,7 +42,7 @@ channel = Channel.current()
 sche = create(GraiaScheduler)
 
 
-async def send_reminder(app, target=None, check=False):
+async def send_reminder(app: Ariadne, target=None):
     github_id = github_config.get('username')
     master = github_config.get('master')
     level_dic = get_github(github_id)
@@ -53,24 +54,15 @@ async def send_reminder(app, target=None, check=False):
     contribution_counter = len(contribution_list)
     last_push = contribution_list[-1]
 
-    if check:
-        if level_dic.get(today) == 0:
-            reminder_content = f"你今天还没有提交 github，上一次提交日期为 {last_push}\n\n" \
-                               f"近一年中你有{contribution_counter}天提交了代码，总贡献数{sum_contribution}"
-            await app.send_message(
-                target if target else master,
-                MessageChain(reminder_content)
-            )
-    else:
-        push_remark = "你今天还没有提交 github"
-        if level_dic.get(today) > 0:
-            push_remark = "你今天提交了 github"
-        reminder_content = f"{push_remark}，上一次提交日期为 {last_push}\n\n" \
-                           f"近一年中你有{contribution_counter}天提交了代码，总贡献数{sum_contribution}"
-        await app.send_message(
-            target if target else master,
-            MessageChain(reminder_content)
-        )
+    push_remark = "你今天还没有提交 github"
+    if level_dic.get(today) > 0:
+        push_remark = "你今天提交了 github"
+    reminder_content = f"{push_remark}，上一次提交日期为 {last_push}\n\n" \
+                       f"近一年中你有{contribution_counter}天提交了代码，总贡献数{sum_contribution}"
+    await app.send_friend_message(
+        target if target else master,
+        MessageChain(reminder_content),
+    )
 
 
 @channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#github')]))
@@ -82,7 +74,6 @@ async def github_reminder(app: Ariadne, target: MessageEvent):
 @channel.use(SchedulerSchema(timers.crontabify("00 23 * * * 00")))
 async def send_github_reminder(app: Ariadne):
     """每天晚上检查是否提交了 github"""
-    check = True
-    await send_reminder(app, check=check)
+    await send_reminder(app)
 
 
