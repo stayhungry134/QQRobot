@@ -34,6 +34,8 @@ def get_github(github_id):
     response = requests.get(url=url, headers=headers).text
     level_list = re.findall(r'data-date="(.*)"\sdata-level="(\d)"*', response)
     level_dic = {key: int(value) for key, value in level_list}
+    # 将 level_dic 按照转换为日期的键排序
+    level_dic = dict(sorted(level_dic.items(), key=lambda x: datetime.datetime.strptime(x[0], '%Y-%m-%d')))
     # 返回 {日期: 贡献值} 的字典
     return level_dic
 
