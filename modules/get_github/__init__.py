@@ -27,11 +27,15 @@ from modules import BASE_DIR, headers
 f = open(os.path.join(BASE_DIR, 'config.yaml'), 'r', encoding='utf-8').read()
 github_config = yaml.load(f, Loader=yaml.FullLoader).get('github')
 
+proxies = {
+    'http': 'http://192.168.10.2:7893',
+    'https': 'http://192.168.10.2:7893'
+}
 
 def get_github(github_id):
     """获取 github 上面的代码提交记录"""
     url = f"https://github.com/{github_id}"
-    response = requests.get(url=url, headers=headers).text
+    response = requests.get(url=url, headers=headers, proxies=proxies).text
     level_list = re.findall(r'data-date="(\w{4}-\w{2}-\w{2})".*data-level="(\w)"*', response)
     level_dic = {key: int(value) for key, value in level_list}
     # 将 level_dic 按照转换为日期的键排序
