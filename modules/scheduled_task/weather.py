@@ -1,23 +1,19 @@
 """
-name: __init__.py.py
-create_time: 2023-02-07
+name: 
+create_time: 2024/4/11 15:40
 author: Ethan
 
-Description:
+Description: 
 """
-import os
-import requests
 import datetime
+import os
+
+import requests
 import yaml
-from creart import create
+
 from graia.ariadne.app import Ariadne
-from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
+from graia.ariadne.event.message import MessageEvent
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.parser.base import MatchRegex, DetectPrefix
-from graia.saya import Channel
-from graia.saya.builtins.broadcast.schema import ListenerSchema
-from graia.scheduler import GraiaScheduler, timers
-from graia.scheduler.saya import SchedulerSchema
 
 from modules import BASE_DIR
 
@@ -81,20 +77,10 @@ def get_city(address):
     return adcode
 
 
-channel = Channel.current()
-sche = create(GraiaScheduler)
+f = open(os.path.join(BASE_DIR, 'config.yaml'), 'r', encoding='utf-8').read()
+send_target = yaml.load(f, Loader=yaml.FullLoader).get('weather')
 
 
-@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#今日天气')]))
-async def send_weather(app: Ariadne, target: MessageEvent):
-    today_weather = get_weather()
-    await app.send_message(
-        target,
-        MessageChain(today_weather),
-    )
-
-
-@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[MatchRegex("^(?!#).+天气.*")]))
 async def send_weather_expand(app: Ariadne, target: MessageEvent, message: MessageChain):
     weather_message = message.display
     address = weather_message.split('天气')[0]
@@ -116,11 +102,10 @@ async def send_weather_expand(app: Ariadne, target: MessageEvent, message: Messa
     )
 
 
-@channel.use(SchedulerSchema(timers.crontabify("50 7 * * * 00")))
 async def send_morning_weather(app: Ariadne):
     morning_weather = get_weather()
-    morning_friend = weather.get('morning_friend')
-    morning_group = weather.get('morning_group')
+    morning_friend = send_target.get('morning_friend')
+    morning_group = send_target.get('morning_group')
     for friend in morning_friend:
         await app.send_friend_message(
             friend,
@@ -131,3 +116,4 @@ async def send_morning_weather(app: Ariadne):
             group,
             MessageChain(morning_weather)
         )
+

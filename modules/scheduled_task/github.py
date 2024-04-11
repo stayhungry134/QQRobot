@@ -1,9 +1,9 @@
 """
-name: __init__.py
-create_time: 2023-02-14
-author: Ethan White
+name: 
+create_time: 2024/4/11 16:05
+author: Ethan
 
-Description: 用于请求 github 的提交记录
+Description: 
 """
 import os
 import re
@@ -27,15 +27,14 @@ from modules import BASE_DIR, headers
 f = open(os.path.join(BASE_DIR, 'config.yaml'), 'r', encoding='utf-8').read()
 github_config = yaml.load(f, Loader=yaml.FullLoader).get('github')
 
-proxies = {
-    'http': 'http://192.168.10.2:7893',
-    'https': 'http://192.168.10.2:7893'
-}
 
 def get_github(github_id):
     """获取 github 上面的代码提交记录"""
     url = f"https://github.com/{github_id}"
-    response = requests.get(url=url, headers=headers, proxies=proxies).text
+    try:
+        response = requests.get(url=url, headers=headers).text
+    except Exception as e:
+        return "请求 github 失败了！"
     level_list = re.findall(r'data-date="(\w{4}-\w{2}-\w{2})".*data-level="(\w)"*', response)
     level_dic = {key: int(value) for key, value in level_list}
     # 将 level_dic 按照转换为日期的键排序
@@ -44,14 +43,17 @@ def get_github(github_id):
     return level_dic
 
 
-channel = Channel.current()
-sche = create(GraiaScheduler)
-
-
-async def send_reminder(app: Ariadne, target=None):
+async def send_github_reminder(app: Ariadne, target=None):
     github_id = github_config.get('username')
     master = github_config.get('master')
     level_dic = get_github(github_id)
+    if isinstance(level_dic, str):
+        await app.send_friend_message(
+            target if target else master,
+            MessageChain(Plain(level_dic)),
+        )
+        return
+
     today = datetime.date.today().isoformat()
     # 总贡献
     sum_contribution = sum(level_dic.values())
@@ -69,17 +71,5 @@ async def send_reminder(app: Ariadne, target=None):
         target if target else master,
         MessageChain(reminder_content),
     )
-
-
-@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#github')]))
-async def github_reminder(app: Ariadne, target: MessageEvent):
-    """通过命令回复 github 提交情况"""
-    await send_reminder(app, target=target)
-
-
-@channel.use(SchedulerSchema(timers.crontabify("00 23 * * * 00")))
-async def send_github_reminder(app: Ariadne):
-    """每天晚上检查是否提交了 github"""
-    await send_reminder(app)
 
 

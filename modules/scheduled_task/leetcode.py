@@ -1,28 +1,18 @@
 """
-name: __init__.py
-create_time: 2023/9/6 16:11
+name: 
+create_time: 2024/4/11 15:32
 author: Ethan
 
-Description: 用于查看 LeetCode上面的刷题记录
+Description: 用于请求 LeetCode上面的刷题记录
 """
-
-import os
-import json
 import datetime
-from pprint import pprint
-
-import requests
+import json
+import os
 import yaml
+import requests
 
-from creart import create
-from graia.ariadne.app import Ariadne
-from graia.ariadne.event.message import FriendMessage, GroupMessage, MessageEvent
+
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.parser.base import DetectPrefix
-from graia.saya import Channel
-from graia.saya.builtins.broadcast.schema import ListenerSchema
-from graia.scheduler import GraiaScheduler, timers
-from graia.scheduler.saya import SchedulerSchema
 
 from modules import BASE_DIR, headers
 
@@ -65,11 +55,7 @@ def get_leet_code(leet_code_id, key):
     return response
 
 
-channel = Channel.current()
-sche = create(GraiaScheduler)
-
-
-async def send_reminder(app, target=None):
+async def send_leetcode_reminder(app, target=None):
     master = leet_code_config.get('master')
     today = datetime.date.today()
 
@@ -117,14 +103,3 @@ async def send_reminder(app, target=None):
         MessageChain(reminder_content)
     )
 
-
-@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#leetcode')]))
-async def leet_code_reminder(app: Ariadne, target: MessageEvent):
-    """通过命令回复 leetcode 提交情况"""
-    await send_reminder(app, target=target)
-
-
-@channel.use(SchedulerSchema(timers.crontabify("30 21 * * * 00")))
-async def send_leet_code_reminder(app: Ariadne):
-    """每天晚上检查是否提交了 leetcode"""
-    await send_reminder(app)
