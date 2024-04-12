@@ -10,7 +10,7 @@ import os
 import yaml
 from graia.ariadne import Ariadne
 from graia.ariadne.event.message import MessageEvent
-from graia.ariadne.message import MessageChain
+from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Voice
 from graiax import silkcoder
 

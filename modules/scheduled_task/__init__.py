@@ -70,6 +70,7 @@ async def github_reminder_task(app: Ariadne):
     """每天晚上检查是否提交了 github"""
     await send_github_reminder(app)
 
+
 # 发送晚安
 @channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#晚安')]))
 async def good_night(app: Ariadne, target: MessageEvent):
@@ -85,6 +86,7 @@ async def good_night_task(app: Ariadne):
 @channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#当当秒杀')]))
 async def dangdang_sale(app: Ariadne, target: MessageEvent):
     await send_dangdang_sale(app, target)
+
 
 @channel.use(SchedulerSchema(timers.crontabify("00 0 * * * 00")))
 async def dangdang_sale_task_0(app: Ariadne):
