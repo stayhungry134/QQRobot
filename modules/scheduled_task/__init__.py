@@ -29,6 +29,7 @@ from .github import send_github_reminder
 from .good_night import send_good_night_task, send_good_night
 from .leetcode import send_leetcode_reminder
 from .weather import send_morning_weather, send_weather_expand
+from .douyinhot import send_douyin_hot, send_douyin_hot_task
 
 channel = Channel.current()
 sche = create(GraiaScheduler)
@@ -43,6 +44,17 @@ async def weather_expand(app: Ariadne, target: MessageEvent, message: MessageCha
 @channel.use(SchedulerSchema(timers.crontabify("50 7 * * * 00")))
 async def morning_weather(app: Ariadne):
     await send_morning_weather(app)
+
+
+# 抖音热搜
+@channel.use(ListenerSchema(listening_events=[GroupMessage, FriendMessage], decorators=[DetectPrefix('#抖音热搜')]))
+async def douyin_hot(app: Ariadne, target: MessageEvent, message: MessageChain):
+    await send_weather_expand(app, target, message)
+
+
+@channel.use(SchedulerSchema(timers.crontabify("00 21 * * * 00")))
+async def douyin_hot_task(app: Ariadne):
+    await send_douyin_hot_task(app)
 
 
 # leetcode 提醒
@@ -111,4 +123,3 @@ async def dangdang_sale_task_14(app: Ariadne):
 @channel.use(SchedulerSchema(timers.crontabify("00 16 * * * 00")))
 async def dangdang_sale_task_16(app: Ariadne):
     await send_dangdang_sale(app)
-
