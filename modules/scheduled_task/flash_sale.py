@@ -28,14 +28,14 @@ async def send_dangdang_sale(app: Ariadne, target=None):
     response = requests.get(url, headers=headers).content.decode('gbk')
     # 获取活动id
     activity_id = re.search(r'"activityId":(\d+)', response).group(1)
-    time = datetime.datetime.now().strftime('%H:%M:%S')
-    if time > '16:00:00':
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    if now >= '16:00:00':
         activity_id = int(activity_id) + 4
-    elif time > '14:00:00':
+    elif now >= '14:00:00':
         activity_id = int(activity_id) + 3
-    elif time > '12:00:00':
+    elif now >= '12:00:00':
         activity_id = int(activity_id) + 2
-    elif time > '10:00:00':
+    elif now >= '10:00:00':
         activity_id = int(activity_id) + 1
     data = {
         'current': '0',
